@@ -16,3 +16,9 @@ type Order struct {
 	Amount     float64   `json:"amount"`
 	Time       time.Time `json:"time"`
 }
+
+type response struct {
+	SMSMessageData struct {
+		Message string `xml:"Message"`
+	} `xml:"SMSMessageData"`
+}
