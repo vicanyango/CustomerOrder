@@ -2,6 +2,7 @@ package data
 
 import (
 	"CustomerOrder/registering"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -24,6 +25,31 @@ func (repo CustomerRepository) CreateCustomer(customer registering.Customers) er
 	}
 	return repo.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&Customer).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (repo CustomerRepository) ValidateCustomerID(customerID uuid.UUID) error {
+	customer := Customer{}
+	err := repo.db.Debug().Where("id=?", customerID).Find(&customer).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo CustomerRepository) CreateOrder(order registering.Order, custID uuid.UUID) error {
+	Order := Order{
+		ID:         newUUID(),
+		CustomerID: custID,
+		Item:       order.Item,
+		Amount:     order.Amount,
+		Time:       time.Now().UTC(),
+	}
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&Order).Error; err != nil {
 			return err
 		}
 		return nil
