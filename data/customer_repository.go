@@ -31,13 +31,13 @@ func (repo CustomerRepository) CreateCustomer(customer registering.Customers) er
 	})
 }
 
-func (repo CustomerRepository) ValidateCustomerID(customerID uuid.UUID) error {
+func (repo CustomerRepository) ValidateCustomerIDAndGetPhoneNumber(customerID uuid.UUID) (phoneNumber string, err error) {
 	customer := Customer{}
-	err := repo.db.Debug().Where("id=?", customerID).Find(&customer).Error
+	err = repo.db.Debug().Where("id=?", customerID).Find(&customer).Error
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return customer.PhoneNumber, nil
 }
 
 func (repo CustomerRepository) CreateOrder(order registering.Order, custID uuid.UUID) error {
