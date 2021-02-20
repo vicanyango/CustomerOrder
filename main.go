@@ -42,4 +42,5 @@ func initializeServices(db *gorm.DB) services {
 
 func initializeRoutes(route *mux.Router, s services) {
 	route.HandleFunc("/customerorder/api/customer", api.CreateCustomer(s.registering)).Methods("POST")
+	route.HandleFunc("/customerorder/api/order", api.CreateOrder(s.registering)).Methods("POST")
 }
