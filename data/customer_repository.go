@@ -31,9 +31,9 @@ func (repo CustomerRepository) CreateCustomer(customer registering.Customers) er
 	})
 }
 
-func (repo CustomerRepository) ValidateCustomerIDAndGetPhoneNumber(customerID uuid.UUID) (phoneNumber string, err error) {
+func (repo CustomerRepository) ValidateCustomerIDAndGetPhoneNumber(customerID uuid.UUID) (string, error) {
 	customer := Customer{}
-	err = repo.db.Debug().Where("id=?", customerID).Find(&customer).Error
+	err := repo.db.Debug().Where("id=?", customerID).Find(&customer).Error
 	if err != nil {
 		return "", err
 	}

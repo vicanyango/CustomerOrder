@@ -20,7 +20,7 @@ type RegisteringService interface {
 
 type RegisteringRepo interface {
 	CreateCustomer(customer Customers) error
-	ValidateCustomerIDAndGetPhoneNumber(customerID uuid.UUID) (phoneNumber string, err error)
+	ValidateCustomerIDAndGetPhoneNumber(customerID uuid.UUID) (string, error)
 	CreateOrder(order Order, custID uuid.UUID) error
 }
 
@@ -79,8 +79,7 @@ func (s *service) CreateOrder(order Order) error {
 	values.Set("username", username)
 	values.Set("message", msg)
 	values.Set("to", phoneNumber)
-	// values.Set("from", "CustomerOrder")
-	atresponse, err := send(values)
+	atresponse, err := s.send(values)
 	if !strings.Contains(strings.ToLower(atresponse.SMSMessageData.Message), "sent") {
 		log.Error("Error encountered in sending SMS via AT: "+atresponse.SMSMessageData.Message, nil)
 		return err
@@ -93,7 +92,7 @@ func (s *service) validateOrder(order Order) error {
 		return errors.New("item amount cannot be empty")
 	}
 	if len(order.Item) == 0 {
-		return errors.New("item caanot be empty")
+		return errors.New("item cannot be empty")
 	}
 	if len(order.CustomerID) == 0 {
 		return errors.New("customer id cannot be nil")
@@ -105,7 +104,7 @@ func parseUUID(id string) (uuid.UUID, error) {
 	return uuid.Parse(id)
 }
 
-func send(data url.Values) (response, error) {
+func (s *service) send(data url.Values) (response, error) {
 	var resppayload response
 
 	url := "https://api.sandbox.africastalking.com/version1/messaging"
