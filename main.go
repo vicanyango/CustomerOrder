@@ -13,8 +13,6 @@ import (
 	"github.com/muhoro/log"
 )
 
-// var Db *gorm.DB
-
 func main() {
 	db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=crm password=felixotieno sslmode=disable")
 

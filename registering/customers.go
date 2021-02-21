@@ -1,9 +1,5 @@
 package registering
 
-import (
-	"time"
-)
-
 type Customers struct {
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
@@ -11,10 +7,9 @@ type Customers struct {
 }
 
 type Order struct {
-	CustomerID string    `json:"customer_id"`
-	Item       string    `json:"item"`
-	Amount     float64   `json:"amount"`
-	Time       time.Time `json:"time"`
+	CustomerID string  `json:"customer_id"`
+	Item       string  `json:"item"`
+	Amount     float64 `json:"amount"`
 }
 
 type response struct {
