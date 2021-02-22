@@ -5,12 +5,13 @@ import (
 	"CustomerOrder/data"
 	"CustomerOrder/registering"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/muhoro/log"
+	// "github.com/muhoro/log"
 )
 
 func main() {
