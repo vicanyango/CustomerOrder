@@ -23,8 +23,3 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ 4e441ff5fbc9b44e57f043842f9ef349eec6c6a2 }}
