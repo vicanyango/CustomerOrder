@@ -22,7 +22,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./... > ./coverage/lcov.info
+      run: go test -v ./...
     - name: Publish to coveralls.io
       uses: coverallsapp/github-action@v1.1.2
       with:
