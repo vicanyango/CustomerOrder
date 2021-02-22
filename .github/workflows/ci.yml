@@ -27,3 +27,4 @@ jobs:
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: 4e441ff5fbc9b44e57f043842f9ef349eec6c6a2
+        repo_token: 9Lphi0Jq8cxt5r9Pp4hKO7TEZnNFr3Nwe
