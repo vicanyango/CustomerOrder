@@ -23,8 +23,12 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-    # - name: Publish to coveralls.io
-    #   uses: coverallsapp/github-action@v1.1.2
-    #   with:
-    #     github-token: 4e441ff5fbc9b44e57f043842f9ef349eec6c6a2
+     - name: make test-coverage
+      run: |
+        make test-coverage
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         
