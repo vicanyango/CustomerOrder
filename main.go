@@ -14,13 +14,11 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	// "github.com/muhoro/log"
 )
 
 var (
 	googleOauthConfig *oauth2.Config
-	// TODO: randomize it
-	oauthStateString = "pseudo-random"
+	oauthStateString  = "pseudo-random"
 )
 
 func main() {
