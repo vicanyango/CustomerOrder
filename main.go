@@ -49,7 +49,7 @@ func initializeServices(db *gorm.DB) services {
 func initializeRoutes(route *mux.Router, s services) {
 	http.HandleFunc("/", handleMain)
 	http.HandleFunc("/login", handleGoogleLogin)
-	http.HandleFunc("/callback", handleGoogleCallback)
+	http.HandleFunc("/customerorder", handleGoogleCallback)
 	route.HandleFunc("/customerorder/api/customer", api.CreateCustomer(s.registering)).Methods("POST")
 	route.HandleFunc("/customerorder/api/order", api.CreateOrder(s.registering)).Methods("POST")
 }
