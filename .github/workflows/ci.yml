@@ -22,7 +22,8 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go get -t ./...
+      run: go test -v ./... --./coverage/lcov.info
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
