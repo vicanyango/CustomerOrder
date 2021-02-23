@@ -1,0 +1,84 @@
+{
+	"info": {
+		"_postman_id": "4bb0bc67-d10c-4565-b845-3842752c629f",
+		"name": "customerorder",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "create customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"first_name\": \"New\",\r\n    \"last_name\": \"User\",\r\n    \"phone_number\": \"0715893271\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:2000/customerorder/api/customer",
+					"host": [
+						"localhost"
+					],
+					"port": "2000",
+					"path": [
+						"customerorder",
+						"api",
+						"customer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Customer Order",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:2000/customerorder/api/order",
+					"host": [
+						"localhost"
+					],
+					"port": "2000",
+					"path": [
+						"customerorder",
+						"api",
+						"order"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "port ",
+			"value": "8001"
+		}
+	]
+}

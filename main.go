@@ -31,7 +31,12 @@ func main() {
 	services := initializeServices(db)
 	route := mux.NewRouter()
 	initializeRoutes(route, services)
-	http.ListenAndServe(":2000", nil)
+	PORT, ok := os.LookupEnv("PORT")
+
+	if ok == false {
+		PORT = ":2000"
+	}
+	http.ListenAndServe(PORT, route)
 }
 
 type services struct {
@@ -47,7 +52,7 @@ func initializeServices(db *gorm.DB) services {
 }
 
 func initializeRoutes(route *mux.Router, s services) {
-	http.HandleFunc("/", handleMain)
+	// http.HandleFunc("/", handleMain)
 	http.HandleFunc("/login", handleGoogleLogin)
 	http.HandleFunc("/customerorder", handleGoogleCallback)
 	route.HandleFunc("/customerorder/api/customer", api.CreateCustomer(s.registering)).Methods("POST")
