@@ -4,25 +4,29 @@ import (
 	"CustomerOrder/api"
 	"CustomerOrder/data"
 	"CustomerOrder/registering"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+
+	// "io/ioutil"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
+	"github.com/joho/godotenv"
 )
 
-var (
-	googleOauthConfig *oauth2.Config
-	oauthStateString  = "pseudo-random"
-)
+type OAuthAccessResponse struct {
+	AccessToken string `json:"access_token"`
+}
 
 func main() {
-	db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=crm password=felixotieno sslmode=disable")
+	connectionString := getEnv("connection_string")
+	db, err := gorm.Open("postgres", connectionString)
 
 	if err != nil {
 		fmt.Println(err)
@@ -31,12 +35,19 @@ func main() {
 	services := initializeServices(db)
 	route := mux.NewRouter()
 	initializeRoutes(route, services)
-	PORT, ok := os.LookupEnv("PORT")
+	// PORT, ok := os.LookupEnv("PORT")
 
-	if ok == false {
-		PORT = ":2000"
+	// if ok == false {
+	// 	PORT = ":2000"
+	// }
+	http.ListenAndServe(":2000", nil)
+}
+
+func init() {
+	// loads values from .env into the system
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("No .env file found")
 	}
-	http.ListenAndServe(PORT, route)
 }
 
 type services struct {
@@ -52,71 +63,125 @@ func initializeServices(db *gorm.DB) services {
 }
 
 func initializeRoutes(route *mux.Router, s services) {
-	// http.HandleFunc("/", handleMain)
-	http.HandleFunc("/login", handleGoogleLogin)
-	http.HandleFunc("/customerorder", handleGoogleCallback)
-	route.HandleFunc("/customerorder/api/customer", api.CreateCustomer(s.registering)).Methods("POST")
-	route.HandleFunc("/customerorder/api/order", api.CreateOrder(s.registering)).Methods("POST")
+
+	// Root route
+	// Simply returns a link to the login route
+	http.HandleFunc("/", rootHandler)
+
+	// Login route
+	http.HandleFunc("/login/github/", githubLoginHandler)
+
+	// Github callback
+	http.HandleFunc("/customerorder/api/customer", githubCallbackHandler)
+
+	// Route where the authenticated user is redirected to
+	http.HandleFunc("/loggedin", func(w http.ResponseWriter, r *http.Request) {
+		loggedinHandler(w, r, "")
+	})
+	http.HandleFunc("/customerorder/api/customers", api.CreateCustomer(s.registering))
+	http.HandleFunc("/customerorder/api/order", api.CreateOrder(s.registering))
 }
 
-func getEnv(key string, defaultVal string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultVal
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `<a href="https://github.com/login/oauth/authorize?client_id=84bee5d27ad1a3270adb&redirect_uri=http://localhost:2000/customerorder/api/customer">LOGIN</a>`)
 }
 
-func init() {
-	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "http://localhost:2000/customerorder",
-		ClientID:     "http://198363440932-tk3225nqc33voqfntlsvmdhugp2fo9tc.apps.googleusercontent.com/",
-		ClientSecret: "ytruxgpvPtqzVtaaBQWykxmj",
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
-	}
-}
-
-func handleMain(w http.ResponseWriter, r *http.Request) {
-	var htmlIndex = `<html><body><a href="/login">Google Log In</a></body></html>`
-	fmt.Fprintf(w, htmlIndex)
-}
-
-func handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	url := googleOauthConfig.AuthCodeURL(oauthStateString)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	content, err := getUserInfo(r.FormValue("state"), r.FormValue("code"))
-	if err != nil {
-		fmt.Println(err.Error())
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+func loggedinHandler(w http.ResponseWriter, r *http.Request, githubData string) {
+	if githubData == "" {
+		// Unauthorized users get an unauthorized message
+		fmt.Fprintf(w, "UNAUTHORIZED!")
 		return
 	}
 
-	fmt.Fprintf(w, "Content: %s\n", content)
+	w.Header().Set("Content-type", "application/json")
+
+	// Prettifying the json
+	var prettyJSON bytes.Buffer
+	// json.indent is a library utility function to prettify JSON indentation
+	parserr := json.Indent(&prettyJSON, []byte(githubData), "", "\t")
+	if parserr != nil {
+		log.Panic("JSON parse error")
+	}
+
+	// Return the prettified JSON as a string
+	fmt.Fprintf(w, string(prettyJSON.Bytes()))
 }
 
-func getUserInfo(state string, code string) ([]byte, error) {
-	if state != oauthStateString {
-		return nil, fmt.Errorf("invalid oauth state")
+func githubLoginHandler(w http.ResponseWriter, r *http.Request) {
+	githubClientID := getEnv("CLIENT_ID")
+	redirectURL := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s", githubClientID, "http://localhost:2000/customerorder/api/customer")
+
+	http.Redirect(w, r, redirectURL, 301)
+}
+
+func githubCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+
+	githubAccessToken := getGithubAccessToken(code)
+
+	githubData := getGithubData(githubAccessToken)
+
+	loggedinHandler(w, r, githubData)
+}
+
+func getGithubData(accessToken string) string {
+	req, reqerr := http.NewRequest("GET", "https://api.github.com/user", nil)
+	if reqerr != nil {
+		log.Panic("API Request creation failed")
 	}
 
-	token, err := googleOauthConfig.Exchange(oauth2.NoContext, code)
-	if err != nil {
-		return nil, fmt.Errorf("code exchange failed: %s", err.Error())
+	authorizationHeaderValue := fmt.Sprintf("token %s", accessToken)
+	req.Header.Set("Authorization", authorizationHeaderValue)
+
+	resp, resperr := http.DefaultClient.Do(req)
+	if resperr != nil {
+		log.Panic("Request failed")
 	}
 
-	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
+	respbody, _ := ioutil.ReadAll(resp.Body)
+
+	return string(respbody)
+}
+
+func getGithubAccessToken(code string) string {
+
+	clientID := getEnv("CLIENT_ID")
+	clientSecret := getEnv("CLIENT_SECRET")
+
+	requestBodyMap := map[string]string{"client_id": clientID, "client_secret": clientSecret, "code": code}
+	requestJSON, _ := json.Marshal(requestBodyMap)
+
+	req, reqerr := http.NewRequest("POST", "https://github.com/login/oauth/access_token", bytes.NewBuffer(requestJSON))
+	if reqerr != nil {
+		log.Panic("Request creation failed")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, resperr := http.DefaultClient.Do(req)
+	if resperr != nil {
+		log.Panic("Request failed")
 	}
 
-	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed reading response body: %s", err.Error())
+	respbody, _ := ioutil.ReadAll(resp.Body)
+
+	// Represents the response received from Github
+	type githubAccessTokenResponse struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+		Scope       string `json:"scope"`
 	}
 
-	return contents, nil
+	var ghresp githubAccessTokenResponse
+	json.Unmarshal(respbody, &ghresp)
+
+	return ghresp.AccessToken
+}
+
+func getEnv(key string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		log.Fatal("key not defined in .env file")
+	}
+	return value
 }
