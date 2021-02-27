@@ -1,5 +1,6 @@
 # CustomerOrder
 ![ci-tests](https://github.com/vicanyango/CustomerOrder/actions/workflows/ci.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/vicanyango/CustomerOrder/badge.svg?branch=main)](https://coveralls.io/github/vicanyango/CustomerOrder?branch=main)
 
 # Description
 
