@@ -35,12 +35,11 @@ func main() {
 	services := initializeServices(db)
 	route := mux.NewRouter()
 	initializeRoutes(route, services)
-	// PORT, ok := os.LookupEnv("PORT")
-
-	// if ok == false {
-	// 	PORT = ":2000"
-	// }
-	http.ListenAndServe(":2000", nil)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	http.ListenAndServe(":"+port, nil)
 }
 
 func init() {
