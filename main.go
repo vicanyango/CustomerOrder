@@ -37,7 +37,7 @@ func main() {
 	initializeRoutes(route, services)
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "2000"
 	}
 	http.ListenAndServe(":"+port, nil)
 }
