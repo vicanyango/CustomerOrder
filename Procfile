@@ -1,1 +1,1 @@
-web: CustomerOrder
+web: bin/CustomerOrder
